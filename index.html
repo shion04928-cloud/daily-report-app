@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>介護日報 テンプレートコピー</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+  <h1>介護日報 テンプレートコピー</h1>
+
+  <!-- STEP 1: 時間帯 -->
+  <div class="step-card" id="step1">
+    <div class="step-title">① 時間帯</div>
+    <div class="btn-group" id="time-btns"></div>
+  </div>
+
+  <!-- STEP 2: サービス -->
+  <div class="step-card disabled" id="step2">
+    <div class="step-title">② サービス種類</div>
+    <div class="btn-group" id="svc-btns"></div>
+  </div>
+
+  <!-- STEP 3: 入浴（身体系のみ表示） -->
+  <div class="step-card disabled" id="step3" style="display:none">
+    <div class="step-title">③ 入浴</div>
+    <div class="btn-group">
+      <button class="bath-btn yes" id="bath-yes">入浴あり</button>
+      <button class="bath-btn no"  id="bath-no">入浴なし</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: 作業内容（家事系のみ表示） -->
+  <div class="step-card disabled" id="step3-work" style="display:none">
+    <div class="step-title">③ 作業内容</div>
+    <div class="btn-group" id="work-btns"></div>
+  </div>
+
+  <!-- STEP 4: 食事（身体系のみ表示） -->
+  <div class="step-card disabled" id="step4" style="display:none">
+    <div class="step-title">④ 食事</div>
+    <div class="btn-group">
+      <button class="meal-btn yes" id="meal-yes">食事あり</button>
+      <button class="meal-btn no"  id="meal-no">食事なし</button>
+    </div>
+  </div>
+
+  <!-- プレビュー -->
+  <div class="preview-card" id="preview">
+    <div class="preview-placeholder">上のボタンを順番に選んでください</div>
+    <div id="preview-text"></div>
+    <div class="copied-badge">✓ コピーしました</div>
+  </div>
+
+  <div class="fallback" id="fallback">
+    <strong>手動でコピーしてください：</strong>
+    <div id="fallback-text"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script src="templates.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

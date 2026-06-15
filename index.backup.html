@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>介護日報 テンプレートコピー</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: "Meiryo", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #f0f2f5;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px 60px;
+    }
+    .container { width: 100%; max-width: 400px; }
+
+    h1 { font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 20px; letter-spacing: .05em; }
+
+    /* ステップカード */
+    .step-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .step-card.disabled { opacity: .35; pointer-events: none; }
+
+    .step-title {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+
+    /* ボタングループ */
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* 時間帯ボタン */
+    .time-btn {
+      flex: 1;
+      padding: 16px 6px;
+      font-family: inherit;
+      font-size: 18px;
+      font-weight: 700;
+      color: #475569;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: .06em;
+      transition: all .15s;
+    }
+    .time-btn:hover { background: #fef3c7; border-color: #fbbf24; color: #92400e; }
+    .time-btn.active { background: #f59e0b; border-color: #f59e0b; color: #fff; box-shadow: 0 2px 8px rgba(245,158,11,.4); }
+
+    /* サービスボタン */
+    .svc-btn {
+      flex: 1;
+      min-width: calc(33.33% - 6px);
+      padding: 16px 4px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      color: #475569;
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      letter-spacing: .04em;
+      transition: all .15s;
+    }
+    .svc-btn:hover { background: #ede9fe; border-color: #a78bfa; color: #5b21b6; }
+    .svc-btn.active { background: #7c3aed; border-color: #7c3aed; color: #fff; box-shadow: 0 2px 8px rgba(124,58,237,.35); }
+
+    /* 入浴ボタン */
+    .bath-btn {
+      flex: 1;
+      padding: 18px 8px;
+      font-family: inherit;
+      font-size: 17px;
+      font-weight: 700;
+      border-radius: 10px;
+      border: 2px solid;
+      cursor: pointer;
+      letter-spacing: .04em;
+      transition: all .15s;
+    }
+    .bath-btn.yes { color: #0369a1; background: #f0f9ff; border-color: #bae6fd; }
+    .bath-btn.yes:hover { background: #e0f2fe; border-color: #38bdf8; }
+    .bath-btn.yes.active { background: #0284c7; border-color: #0284c7; color: #fff; box-shadow: 0 2px 8px rgba(2,132,199,.35); }
+
+    .bath-btn.no { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+    .bath-btn.no:hover { background: #dcfce7; border-color: #4ade80; }
+    .bath-btn.no.active { background: #16a34a; border-color: #16a34a; color: #fff; box-shadow: 0 2px 8px rgba(22,163,74,.35); }
+
+    /* プレビュー */
+    .preview-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.08);
+      padding: 16px 18px;
+      min-height: 80px;
+      position: relative;
+      transition: box-shadow .2s;
+    }
+    .preview-card.ok { box-shadow: 0 0 0 2px #10b981, 0 2px 10px rgba(16,185,129,.15); }
+    .preview-placeholder { font-size: 13px; color: #cbd5e1; line-height: 1.7; }
+    #preview-text { display: none; font-size: 14px; line-height: 1.9; color: #1e293b; padding-right: 4px; }
+    .copied-badge {
+      display: none;
+      position: absolute;
+      top: 12px; right: 14px;
+      font-size: 11px; font-weight: 700;
+      color: #10b981; letter-spacing: .04em;
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 6px;
+      box-shadow: 0 0 0 1px #d1fae5;
+    }
+    .preview-card.ok .copied-badge { display: block; }
+
+    /* トースト */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translateX(-50%) translateY(14px);
+      background: #1e293b; color: #fff;
+      padding: 10px 24px; border-radius: 24px;
+      font-size: 13px; font-weight: 700;
+      opacity: 0; transition: opacity .2s, transform .2s;
+      pointer-events: none; white-space: nowrap; z-index: 100;
+      letter-spacing: .04em;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.err  { background: #dc2626; }
+
+    /* フォールバック */
+    .fallback {
+      display: none; margin-top: 12px; padding: 12px 14px;
+      background: #fffbeb; border: 1px solid #fcd34d;
+      border-radius: 12px; font-size: 12px; color: #92400e;
+    }
+    .fallback strong { display: block; margin-bottom: 6px; }
+    #fallback-text {
+      background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+      padding: 8px 10px; font-size: 12px; color: #333;
+      word-break: break-all; user-select: all; line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>介護日報 テンプレートコピー</h1>
+
+  <!-- STEP 1: 時間帯 -->
+  <div class="step-card" id="step1">
+    <div class="step-title">① 時間帯</div>
+    <div class="btn-group" id="time-btns"></div>
+  </div>
+
+  <!-- STEP 2: サービス -->
+  <div class="step-card disabled" id="step2">
+    <div class="step-title">② サービス種類</div>
+    <div class="btn-group" id="svc-btns"></div>
+  </div>
+
+  <!-- STEP 3: 入浴（身系のみ表示） -->
+  <div class="step-card disabled" id="step3" style="display:none">
+    <div class="step-title">③ 入浴</div>
+    <div class="btn-group">
+      <button class="bath-btn yes" id="bath-yes">入浴あり</button>
+      <button class="bath-btn no"  id="bath-no">入浴なし</button>
+    </div>
+  </div>
+
+  <!-- プレビュー -->
+  <div class="preview-card" id="preview">
+    <div class="preview-placeholder">上のボタンを順番に選んでください</div>
+    <div id="preview-text"></div>
+    <div class="copied-badge">✓ コピーしました</div>
+  </div>
+
+  <div class="fallback" id="fallback">
+    <strong>手動でコピーしてください：</strong>
+    <div id="fallback-text"></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+// ========== テンプレートデータ ==========
+// キー: "{サービス}_{時間}_{入浴}" or "{サービス}_{時間}"（家系/生系）
+const templates = {
+
+  // ── 身１ ──────────────────────────────
+  "身１_朝_通常": [
+    "入室し挨拶、体調確認。トイレ誘導後洗面介助、口腔ケア・洗顔、更衣介助、服薬確認。洗濯、調理配膳下膳行う。「お腹いっぱい」とお話しされていました。",
+    "チャイム鳴らし挨拶して入室。声掛けして体調確認してから起床介助を行う。排泄を促し、移動して口腔ケアと洗面を行う。一緒に衣類を確認してから更衣と服薬確認を実施。",
+    "挨拶の後入室し体調確認。排泄の見守りを行い、起床介助、洗面・口腔ケア、更衣介助を実施。服薬確認後、朝食準備・配膳を行い、下膳、キッチン清掃、洗濯物の干しを本人様と一緒に行い、ゴミ出しで本日の支援を終了しました。",
+    "挨拶して入室　体調確認 起床介助を行い、声かけにてゆっくりと起き上がっていただいた。排泄確認行う。洗面・口腔ケア行った。ご自身で選んだ衣服に更衣していただいた。朝食と温かいコーヒーを準備。食後の後片付けとゴミ出し行った。服薬確認済。",
+    "入室後、体調確認と排泄誘導を行う。洗面・口腔ケア、更衣を支援した。内服薬を準備し服薬確認実施。朝食を準備し居室にて召し上がっていただいた。台所を清掃し、最後にゴミ出しを行った。",
+    "挨拶して入室　体調確認 声掛けにより起床促し、ゆっくりと起き上がりあり。動作は緩やかだが安定している。洗面・口腔ケアは自立にて実施。衣類は本人の希望にて選択し、更衣一部介助。服薬確認済み。"
+  ],
+  "身１_朝_入浴": [
+    "挨拶し入室体調確認。入浴楽しみにされてたみたいです。スムーズに準備も行い入浴実施。入浴後水分補給促し服薬確認行いました。",
+    "挨拶し入室　体調確認 朝の入浴介助を実施した。安全に配慮し見守り対応。入浴後は更衣し水分補給を促した。服薬確認済み。洗面・口腔ケアを実施後、退室した。"
+  ],
+
+  "身１_昼_通常": [
+    "挨拶して入室確認。声かけにて体調確認。お弁当温めて配膳。美味しいとしっかり食べられています。服薬確認。気分確認。配膳などの食器洗い水回りの掃除しました。",
+    "挨拶し入室、体調確認。洗面・口腔ケア・更衣を支援した。服薬確認済み。",
+    "チャイムを鳴らし挨拶して入室　体調確認 昼食の確認後、配膳と下膳を行う。食後台所清掃実施。服薬確認済み。"
+  ],
+  "身１_昼_入浴": [
+    "挨拶し入室　体調確認 体調良好。入浴の意思確認後、入浴準備を行い入浴実施。入浴後水分しっかりとっていただいてます。更衣介助後服薬確認を行った。",
+    "挨拶して入室。体調確認。昼間の入浴介助を実施した。安全確認を行いながら見守り対応。入浴後は更衣し水分補給を促した。服薬確認済み。"
+  ],
+
+  "身１_夜_通常": [
+    "挨拶し入室。体調確認を行い、本日の状態を確認。洗面・口腔ケア・更衣を声かけにて介助。服薬確認を実施。",
+    "入室し挨拶、体調確認。トイレ誘導後、洗面所にて口腔ケア・洗顔実施。更衣介助、服薬確認。",
+    "挨拶し入室　体調確認 洗面　口腔ケア　ご自身で選ばれた寝衣に更衣介助行いました。服薬確認を実施。",
+    "挨拶して入室。体調確認を行う。更衣後移動して洗面と口腔ケア実施。服薬確認後、夕食確認を行い配膳。使用した調理器具の洗浄を行う。",
+    "チャイムを鳴らし入室　体調確認 トイレ促し。洗面　口腔ケアを行った。ご自身で選ばれた寝衣に着替えていただいた。ご自身と確認を行い服薬確認済み。"
+  ],
+  "身１_夜_入浴": [
+    "挨拶して入室。訪問時の表情は良好で、体調は安定していた。入浴介助を実施し、皮膚状態を確認したが異常は見られなかった。更衣介助後、服薬確認を行い確実に内服された。",
+    "挨拶して入室。体調良好。入浴介助を行い気分転換につながった様子。更衣介助後、服薬確認済み。",
+    "挨拶して入室 入浴準備を行い入浴実施。入浴後は水分補給。更衣介助。服薬確認しました。",
+    "チャイムを鳴らして入室し、挨拶後にご本人様の体調を確認しました。入浴介助を行い、口腔ケアもご本人様に声をかけながら実施し、更衣も介助しました。水分摂取促し、服薬の確認も一緒に行いました。"
+  ],
+
+  // ── 身２ ──────────────────────────────
+  "身２_朝_通常": [
+    "挨拶して入室。体調確認では特に変わりなく安定しているとの返答あり。洗面誘導・口腔ケア実施。服薬確認行いました。",
+    "挨拶して入室。起床確認後は比較的スムーズに離床された。体調確認では異常なし。洗面、口腔ケア、更衣介助を行った。移動介助にて転倒予防を図りながら支援。服薬確認も問題なく終了した。",
+    "挨拶し入室体調確認 薬の副作用で少しふらつきがある為一部介助。洗面、口腔ケア行い服薬確認してます。",
+    "挨拶して入室。起床を促し離床された。ふらつきが見られたため転倒に留意しながら支援した。洗面所にて口腔ケアと洗面を実施。更衣は衣類選択の一部を支援した。服薬確認を実施した。"
+  ],
+  "身２_朝_入浴": [
+    "挨拶し入室体調確認。移動時少しふらつきあり。無理のない範囲でケア行い入浴実施。入浴後水分補給促し服薬確認しました。",
+    "挨拶し入室。体調確認。朝の入浴準備を行い入浴実施。洗身・洗髪介助を行った。入浴後は更衣介助し水分補給促した。服薬確認済み。"
+  ],
+
+  "身２_昼_通常": [
+    "お声掛けにて体調確認。最近排便ないとの事で水分補給しっかりするように促す。服薬確認。",
+    "挨拶して入室　体調確認。昼食の確認後、配膳と下膳を行う。食後台所清掃実施。服薬確認済み。"
+  ],
+  "身２_昼_入浴": [
+    "挨拶し入室　体調確認 体調良好。入浴の意思確認し浴槽へ誘導、洗身・洗髪一部介助実施。浴中ふらつきなく異常なし。入浴後水分しっかりとっていただいてます。さっぱりし気持ち良かったとおっしゃられてました。",
+    "インターホーンを鳴らし入室して体調確認を行う。声掛けしてお湯をはりながら入浴準備を行う。ふらつきや転倒に注意しながら一部介助で背中や髪を洗う。入浴後スポーツドリンクを飲まれました。",
+    "挨拶して入室。体調確認後、昼間の入浴介助を実施した。更衣後に水分摂取していただき、服薬確認済み。"
+  ],
+
+  "身２_夜_通常": [
+    "挨拶し入室　体調確認 少しふらつきがありました。ご自身のペースで行った。洗面　口腔ケア行う。服薬確認。",
+    "挨拶して入室　体調確認 変わりなく過ごされているとのこと。トイレ促し一部介助行う。移動時ふらつきに注意しながら洗面・口腔ケア行う。水分補給していただいてます。寝衣に更衣していただく。服薬確認済。"
+  ],
+  "身２_夜_入浴": [
+    "挨拶して入室。気分は安定していた。浴室内の環境を整えた上で入浴介助を実施。洗髪や背部洗浄を介助し、清潔保持を図った。終了後は安楽な表情が見られた。",
+    "挨拶し入室。体調確認。入浴準備行い入浴実施を行う。洗身洗髪介助を行う。転倒に注意して行った。入浴後は椅子に座っていただきご自身で選ばれた寝衣に着替えていただいた。居室に戻りしっかり水分をとっていただいた。服薬確認を行う。",
+    "チャイムを鳴らし入室。お声掛けし体調確認。入浴準備行い。トイレ誘導。見守り・一部介助にて入浴行う。ご本人様に選んでいただいた寝衣への更衣介助行う。水分補給促し、服薬確認行う。退室する。",
+    "チャイム鳴動後入室し体調確認行い入浴準備行いました。浴室へ誘導し洗身・洗髪介助行いました。入浴後清拭・更衣行い水分補給・服薬確認行いました。",
+    "挨拶して入室。体調確認。入浴の準備を行う。入浴中は見守りを実施し、洗身・洗髪について必要な範囲で介助する。更衣後に水分補給をしていただく。口腔ケアを行い、服薬状況を確認する。他にお困り事がないことを確認し退出する。"
+  ],
+
+  // ── 家１ ──────────────────────────────
+  "家１_朝": [
+    "挨拶して入室　体調確認 体調変わりなしとのこと。朝食を配膳し見守り。食後下膳し台所清掃行う。ゴミまとめ行う。",
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。水回り清掃行いました。ゴミまとめて捨てています。",
+    "朝食用においにぎりと味噌汁を準備。食器洗浄後、居室の掃除機掛けを行う。ゴミ袋を整理し、可燃ごみのゴミ出しを実施。",
+    "声掛けして朝食準備を行い配膳する。完食されました。下膳して食器類を洗浄してゴミをまとめました。その後換気を行い居室とトイレ清掃を行いました。",
+    "挨拶し入室。体調確認。乾いた衣類は畳んで収納。換気行い室内清掃。トイレ掃除を行いました。水回り清掃。ゴミ捨てしています。"
+  ],
+  "家１_昼": [
+    "挨拶して入室　体調確認 居室内の掃除を行い、整理整頓を実施。トイレの清掃を行う。昼食後の後片づけを対応した。",
+    "昼食うどん準備　配膳。居室換気して掃除機掛け行い台所シンク清掃。ゴミをまとめて所定場所へ搬出。",
+    "声掛けし昼食の準備して配膳を行う。本人に清掃場所を確認し台所周辺の清掃を実施。",
+    "食欲はあるとの事。昼食準備・配膳。居室清掃は短時間で効率的に実施。台所は調理後の清掃を丁寧に実施。"
+  ],
+  "家１_夜": [
+    "夕食を温めて配膳し完食確認してから下膳を行う。洗濯し部屋干し実施し乾いた衣類を収納実施。散乱しているゴミを確認してから処分し、居室内の整理整頓を実施しました。",
+    "洗濯実施。換気行い、キッチン　ハイター消毒清掃行いました。ゴミはまとめて捨てています。",
+    "洗濯、床清掃、ゴミ出しを実施。支援中は日常生活について会話を行いながら穏やかに過ごされた。",
+    "洗濯物の洗浄と整理を行い、居室全体の掃除機掛けを実施。ゴミを分別して収集場所へ搬出した。"
+  ],
+
+  // ── 家２ ──────────────────────────────
+  "家２_朝": [
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。床はクイックルワイパー行いました。トイレ・キッチンはハイター行っています。ゴミまとめて捨てています。",
+    "挨拶し入室。体調確認。洗濯実施。トイレ・キッチン清掃行いました。換気行い室内清掃。床は水拭き行いました。",
+    "挨拶して入室　体調確認 ご本人と相談しながら朝食の準備を行った。食後は台所の片付けおよび清掃を実施した。換気後、居室内の掃除機がけと拭き掃除を行った。ご本人に確認を行い、洗濯を実施した。"
+  ],
+  "家２_昼": [
+    "チャイムを鳴らし挨拶後に入室し体調確認を行いました。冷蔵庫内確認後昼食を決定しました。配膳し見守りにて喫食されました。食器洗い介助にて実施し食器拭きを実施されました。キッチン清掃を実施しました。トイレ清掃を実施しました。",
+    "挨拶して入室　体調確認 ご本人と相談しながら昼食の準備を行った。食後は台所の片付けおよび清掃を実施した。居室内の掃除機がけと拭き掃除を行った。洗濯を実施した。"
+  ],
+  "家２_夜": [
+    "挨拶して入室。体調確認。ご本人の確認をいただいたうえで洗濯を行った。冷蔵庫内の食材を確認後、あるもので簡単な調理を行った。配膳・下膳を実施した。換気後に居室清掃、トイレ・浴室清掃、ゴミの整理を行った。体調と安全面を確認し退出した。",
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。ゴミまとめて捨てています。",
+    "挨拶して入室　体調確認 換気を行いながら居室の掃除機掛け、拭き掃除行う。洗濯物を確認して洗濯を行い、乾燥済みの衣類は畳んで収納しました。冷蔵庫内を確認し、食材に合わせて調理と配膳を行い、食後は下膳と食器洗い、台所清掃を実施しました。",
+    "挨拶して入室　体調確認 汚染衣類確認後洗濯実施。換気を行いながら室内清掃し、トイレの床と便器掃除をしました。"
+  ],
+
+  // ── 生１ ──────────────────────────────
+  "生１_朝": [
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。水回り清掃行いました。ゴミまとめて捨てています。",
+    "体調確認では大きな変化なし。居室全体の清掃を行い、床面や家具周辺を清潔な状態に整えた。利用者も安心した様子であった。",
+    "挨拶し入室。体調確認。洗濯実施。換気行い居室清掃実施。台所清掃とトイレはハイター清掃を行う。確認してゴミ出しを行いました。"
+  ],
+  "生１_昼": [
+    "声掛けにて入室。気分確認し「大丈夫」と話されました。汚染衣類を確認してから洗濯実施。声掛けして一連の掃除を行う。洗濯物を指定の場所に干しました。",
+    "挨拶して入室　体調確認 居室内の掃除を行い、整理整頓を実施。確認してゴミ出しを行いました。"
+  ],
+  "生１_夜": [
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。水回り清掃行いました。ゴミまとめて捨てています。",
+    "洗濯支援を実施。衣類の洗濯後、天候を考慮して室内干しを行った。トイレ清掃では便器や壁面の汚れを除去し、消毒作業を行った。",
+    "挨拶し入室。体調確認。洗濯実施。ご本人様とたたんで収納行いました。換気行い室内清掃。ゴミまとめて捨てています。"
+  ],
+
+  // ── 生２ ──────────────────────────────
+  "生２_朝": [
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。床はクイックルワイパー行いました。トイレ・キッチンはハイター行っています。ゴミまとめて捨てています。",
+    "挨拶し入室。体調確認。居室の掃除機掛けを実施し、汚れのある箇所は雑巾で水拭きを行う。水回りはハイターを使用して清掃。ゴミは本人様に確認の上まとめる。"
+  ],
+  "生２_昼": [
+    "挨拶し入室。体調確認。居室の掃除機掛けを実施し、汚れのある箇所は雑巾で水拭きを行う。水回りはハイターを使用して清掃。ゴミは本人様に確認の上まとめる。"
+  ],
+  "生２_夜": [
+    "挨拶し入室。体調確認。洗濯実施。換気行い室内清掃。ゴミまとめて捨てています。",
+    "挨拶して入室。体調確認。汚染衣類を確認してから洗濯実施。換気しながら室内清掃実施。台所清掃とトイレはハイター清掃を行う。確認してゴミ出しを行いました。"
+  ]
+
+};
+
+// ボタン構成
+const times    = ["朝", "昼", "夜"];
+const services = ["身１", "身２", "家１", "家２", "生１", "生２"];
+const svcNeedsBath = (svc) => svc.startsWith("身");
+// ========================================
+
+let sel = { time: null, svc: null };
+let toastTimer = null;
+const lastPicked = {};
+
+function pickRandom(arr, key) {
+  if (arr.length === 1) return arr[0];
+  const prev = lastPicked[key];
+  const candidates = arr.filter(t => t !== prev);
+  const chosen = candidates[Math.floor(Math.random() * candidates.length)];
+  lastPicked[key] = chosen;
+  return chosen;
+}
+
+function showToast(msg, isErr) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show" + (isErr ? " err" : "");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ""; }, 2000);
+}
+
+function showPreview(text, ok) {
+  const p  = document.getElementById("preview");
+  const pt = document.getElementById("preview-text");
+  p.querySelector(".preview-placeholder").style.display = "none";
+  pt.style.display = "block";
+  pt.textContent = text;
+  p.className = "preview-card" + (ok ? " ok" : "");
+  if (ok) setTimeout(() => p.classList.remove("ok"), 2200);
+}
+
+function doCopy(key) {
+  const list = templates[key];
+  if (!list || list.length === 0) {
+    showToast("テンプレートがありません", true);
+    return;
+  }
+  const text = pickRandom(list, key);
+  if (!navigator.clipboard) {
+    showPreview(text, false);
+    document.getElementById("fallback").style.display = "block";
+    document.getElementById("fallback-text").textContent = text;
+    showToast("手動でコピーしてください", true);
+    return;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    showPreview(text, true);
+    document.getElementById("fallback").style.display = "none";
+    showToast("コピーしました ✓");
+  }).catch(() => {
+    showPreview(text, false);
+    document.getElementById("fallback").style.display = "block";
+    document.getElementById("fallback-text").textContent = text;
+    showToast("手動でコピーしてください", true);
+  });
+}
+
+function setActive(group, btn) {
+  group.querySelectorAll("button").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+}
+
+// ── Step 1: 時間帯 ──
+const timeBtns = document.getElementById("time-btns");
+times.forEach(t => {
+  const btn = document.createElement("button");
+  btn.className = "time-btn";
+  btn.textContent = t;
+  btn.addEventListener("click", () => {
+    sel.time = t;
+    sel.svc  = null;
+    setActive(timeBtns, btn);
+    // step2 enable, step3 hide
+    document.getElementById("step2").classList.remove("disabled");
+    document.getElementById("step3").style.display = "none";
+    document.getElementById("step3").classList.add("disabled");
+    document.querySelectorAll(".svc-btn").forEach(b => b.classList.remove("active"));
+    document.getElementById("bath-yes").classList.remove("active");
+    document.getElementById("bath-no").classList.remove("active");
+  });
+  timeBtns.appendChild(btn);
+});
+
+// ── Step 2: サービス ──
+const svcBtns = document.getElementById("svc-btns");
+services.forEach(svc => {
+  const btn = document.createElement("button");
+  btn.className = "svc-btn";
+  btn.textContent = svc;
+  btn.addEventListener("click", () => {
+    if (!sel.time) return;
+    sel.svc = svc;
+    setActive(svcBtns, btn);
+
+    if (svcNeedsBath(svc)) {
+      // 身系 → step3 表示
+      const s3 = document.getElementById("step3");
+      s3.style.display = "block";
+      s3.classList.remove("disabled");
+      document.getElementById("bath-yes").classList.remove("active");
+      document.getElementById("bath-no").classList.remove("active");
+    } else {
+      // 家系/生系 → 即コピー
+      document.getElementById("step3").style.display = "none";
+      doCopy(`${svc}_${sel.time}`);
+    }
+  });
+  svcBtns.appendChild(btn);
+});
+
+// ── Step 3: 入浴 ──
+document.getElementById("bath-yes").addEventListener("click", function() {
+  if (!sel.time || !sel.svc) return;
+  setActive(document.querySelector(".btn-group:last-of-type"), this);
+  doCopy(`${sel.svc}_${sel.time}_入浴`);
+});
+document.getElementById("bath-no").addEventListener("click", function() {
+  if (!sel.time || !sel.svc) return;
+  setActive(document.querySelector(".btn-group:last-of-type"), this);
+  doCopy(`${sel.svc}_${sel.time}_通常`);
+});
+</script>
+</body>
+</html>
