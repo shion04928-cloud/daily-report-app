@@ -1,3 +1,25 @@
+// ── ログイン処理 ──
+const PWD = "purogure0615";
+const overlay = document.getElementById('login-overlay');
+if (sessionStorage.getItem('isLoggedIn') === 'true') {
+  overlay.style.display = 'none';
+} else {
+  overlay.style.display = 'flex';
+}
+
+document.getElementById('login-btn').addEventListener('click', () => {
+  const pwd = document.getElementById('login-pwd').value;
+  if (pwd === PWD) {
+    sessionStorage.setItem('isLoggedIn', 'true');
+    overlay.style.display = 'none';
+  } else {
+    document.getElementById('login-err').textContent = 'パスワードが間違っています';
+  }
+});
+document.getElementById('login-pwd').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') document.getElementById('login-btn').click();
+});
+
 const times    = ["朝", "昼", "夜"];
 const services = ["身１", "身２", "家１", "家２", "生１", "生２"];
 const svcNeedsBath = (svc) => svc.startsWith("身");

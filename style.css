@@ -184,3 +184,33 @@ h1 { font-size: 17px; font-weight: 700; color: #1e293b; margin-bottom: 20px; let
 .meal-btn.no { color: #64748b; background: #f8fafc; border-color: #e2e8f0; }
 .meal-btn.no:hover { background: #f1f5f9; border-color: #94a3b8; }
 .meal-btn.no.active { background: #475569; border-color: #475569; color: #fff; box-shadow: 0 2px 8px rgba(71,85,105,.35); }
+
+/* ログインオーバーレイ */
+#login-overlay {
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background: #f0f2f5; z-index: 1000;
+  display: flex; justify-content: center; align-items: center;
+}
+.login-box {
+  background: #fff; padding: 32px 24px; border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.1); width: 90%; max-width: 320px;
+  text-align: center;
+}
+.login-box h2 {
+  font-size: 16px; font-weight: 700; color: #1e293b; margin-bottom: 24px; letter-spacing: .05em;
+}
+#login-pwd {
+  width: 100%; padding: 14px; font-size: 15px; border: 2px solid #e2e8f0;
+  border-radius: 8px; margin-bottom: 16px; text-align: center;
+  transition: border-color .2s; outline: none;
+}
+#login-pwd:focus { border-color: #3b82f6; }
+#login-btn {
+  width: 100%; padding: 14px; font-size: 15px; font-weight: 700;
+  background: #3b82f6; color: #fff; border: none; border-radius: 8px;
+  cursor: pointer; transition: background .2s;
+}
+#login-btn:hover { background: #2563eb; }
+#login-err {
+  color: #dc2626; font-size: 12px; font-weight: 700; margin-top: 12px; min-height: 14px;
+}
